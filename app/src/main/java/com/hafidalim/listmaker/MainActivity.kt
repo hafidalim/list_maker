@@ -1,5 +1,6 @@
 package com.hafidalim.listmaker
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -13,9 +14,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(),ListSelectionRecyclerViewAdapter.ListSelectionRecyclerViewClickListener {
     lateinit var listsRecyclerView: RecyclerView
     val listDataManager : ListDataManager = ListDataManager(this)
+    companion object {
+        const val INTENT_LIST_KEY = "list"
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -28,7 +32,7 @@ class MainActivity : AppCompatActivity() {
         val lists = listDataManager.readLists()
         listsRecyclerView = findViewById(R.id.lists_recyclerview)
         listsRecyclerView.layoutManager =LinearLayoutManager(this)
-        listsRecyclerView.adapter = ListSelectionRecyclerViewAdapter(lists)
+        listsRecyclerView.adapter = ListSelectionRecyclerViewAdapter(lists,this)
 
         fab.setOnClickListener {
             showCreateListDialog()
@@ -63,12 +67,20 @@ class MainActivity : AppCompatActivity() {
         builder.setPositiveButton(positiveButtonTitle){dialog, _ ->
             val list = TaskList(listTitleEditText.text.toString())
             listDataManager.saveList(list)
-
-
             val recyclerAdapter = listsRecyclerView.adapter as ListSelectionRecyclerViewAdapter
             recyclerAdapter.addLists(list)
             dialog.dismiss()
+            showListDetail(list)
         }
         builder.create().show()
+    }
+    private fun showListDetail(list : TaskList){
+        val listDetailIntent = Intent(this, ListDetailActivity::class.java)
+        listDetailIntent.putExtra(INTENT_LIST_KEY,list)
+        startActivity(listDetailIntent)
+    }
+
+    override fun listItemClicked(list: TaskList) {
+        showListDetail(list)
     }
 }
